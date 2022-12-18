@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"     integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <title>Publications</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+          <a class="navbar-brand" href="index.html">Manga Collective</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="authors.html">Authors</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="publications.html">Publications</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+    </nav>
+
+    <div class="container mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mt-2">
+            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item"><a href="publications.html">Publications</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Manga<span class="auth_name"></span></li>
+            </ol>
+        </nav>
+
+        <h1 class="work"></h1>
+        <hr>
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Manga Details</h3>
+                <hr>
+
+                <div class="mb-3">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" class="form-control" placeholder="New Manga Title">
+                </div>
+
+                <div class="mb-3">
+                    <label for="author_name" class="input-group-text">Author</label>
+                    <select name="author_name" id="author_name" class="form-select">
+                        <option value="">Choose Author</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="publisher">Publisher</label>
+                    <input type="text" id="publisher" class="form-control" placeholder="e.g. Shueisha, Weekly Comic Jump...">
+                </div>
+            </div>
+
+            <div class="d-flex">
+                <button class="btn btn-primary me-2" id="save_btn">
+                    <i class="fa fa-save"></i> Save
+                </button>
+
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fa fa-trash"></i> Delete
+                </button>
+
+                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModallabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Manga?</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="alert alert-danger">
+                                    Are you sure you want to remove this manga from the list?
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" id="confirm_delete_manga">Delete</button>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getPublication(id) {
+            fetch('http://127.0.0.1:8000/api/publications/' + id)
+            .then(response=>{
+                if(response.status==200) {
+                    response.json()
+                    .then(data=>renderPublication(data))
+                }
+            })
+        }
+
+        function renderPublication(publication) {
+            $("#title").text(publication.title)
+            $("#author_name").text(publication.author.author_name)
+            $("#publisher").text(publication.publisher)
+        }
+
+        function getAuthors() {
+            fetch('http://127.0.0.1:8000/api/authors')
+            .then(response=>{
+                if(response.status==200) {
+                    response.json()
+                    .then(data=>renderAuthorsSelect(data.authors))
+                }
+            })
+        }
+
+        function renderAuthorsSelect(authors) {
+            const auth = $("#author_name")
+            authors.forEach((a)=>{
+                const opt = $(document.createElement("option"))
+                opt.attr('value', a.id)
+                opt.text(a.author_name)
+                auth.append(opt)
+            })
+        }
+
+        $(document).ready(()=>{
+            const urlParams = new URLSearchParams(window.location.search);
+            const param_id = urlParams.get('id');
+
+            getPublication(param_id)
+            getAuthors()
+
+            $("#save_btn").click(()=>{
+                const data = {
+                    "title":$("#title").val(),
+                    "author_id":$("#author_name").val(),
+                    "publisher":$("#publisher").val(),
+                }
+                fetch('http://127.0.0.1:8000/api/publications/' + param_id, {
+                    credentials: "omit",
+                    method: "PUT",
+                    body: JSON.stringify(data),
+                    headers: {
+                        "Accept":"application/json",
+                        "Content-Type":"application/json"
+                    }
+                })
+                .then(response=>{
+                    if(response.status==200){
+                        alert('Manga details updated.')
+                        window.location='publications.html'
+                    }
+                })
+            })
+
+            $("#confirm_delete_manga").click(()=>{
+                fetch('http://127.0.0.1:8000/api/publications/' + param_id,{
+                    credentials:"omit",
+                    method:"DELETE",
+                    headers:{
+                        'Accept':'application/json'
+                    }
+                }).then(response=>{
+                    if(response.status==200) {
+                        alert('Manga has been removed from the list.')
+                        window.location='publications.html'
+                    }
+
+                    if(response.status==500) {
+                        alert('An error has occurred. Please try again.')
+                    }
+                })
+            })
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <title>Manga Collective</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+          <a class="navbar-brand" href="index.html">Manga Collective</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="authors.html">Authors</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="publications.html">Publications</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="float-end">
+            <button class="btn btn-primary float-end" type="button" data-bs-toggle="modal" data-bs-target="#addPublicationModal">
+                <i class="fa-solid fa-book"></i> 
+                Publish New Work
+            </button>
+        </div>
+
+        <div class="modal fade" id="addPublicationModal" tabindex="-1" aria-labelledby="createPublicationModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="createPublicationModalLabel">New Work Details</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label for="title">Manga Title</label>
+                    <input type="text" id="title" class="form-control" placeholder="e.g. Dragonball">
+                  </div>
+        
+                  <div class="mb-3">
+                    <label for="author_name">Author</label>
+                    <select name="author_name" id="author_name" class="form-select">
+                        <option value="">Choose Author</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="publisher">Publisher</label>
+                    <input type="text" id="publisher" class="form-control" placeholder="e.g. Kodansha">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" id="save_btn">Publish Work</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <h1>Publications</h1>
+        <hr>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Manga Title</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th class="text-center">...</th>
+                </tr>
+                <tbody id="publications"></tbody>
+            </thead>
+        </table>
+    </div>
+
+    <script>
+        function getAllPublications() {
+            fetch("http://127.0.0.1:8000/api/publications")
+            .then(response=>{
+                if(response.status==200) {
+                    response.json()
+                        .then(data=>{
+                            renderPublications(data.publications)
+                        })
+                }
+            })
+        }
+
+        function renderPublications(publications) {
+            const tbody = $("#publications")
+
+            publications.forEach((pub)=>{
+                const tr = $(document.createElement("tr"))
+
+                tr.append("<td>" + pub.title + "</td>")
+                tr.append("<td>" + pub.author.author_name + "</td>")
+                tr.append("<td>" + pub.publisher + "</td>")
+                tr.append("<td class='text-center'><a href='show_publication.html?id=" + pub.id + "' class='btn btn-sm btn-info'><i class='fa-solid fa-square-pen'></i></a>")
+
+                tbody.append(tr)
+            })
+        }
+
+        function getAuthors() {
+            fetch('http://127.0.0.1:8000/api/authors')
+            .then(response=>{
+                if(response.status==200) {
+                    response.json()
+                    .then(data=>renderAuthorsSelect(data.authors))
+                }
+            })
+        }
+
+        function renderAuthorsSelect(authors) {
+            const auth = $("#author_name")
+            authors.forEach((a)=>{
+                const opt = $(document.createElement("option"))
+                opt.attr('value', a.id)
+                opt.text(a.author_name)
+                auth.append(opt)
+            })
+        }
+
+        function clearForm() {
+            $("#title").val(null)
+            $("#author_name").val(null)
+            $("#publisher").val(null)
+        }
+
+        function refreshPage() {
+            alert("New work published! The page will now be refreshed.");
+            location.reload();
+          }          
+
+        $(document).ready(()=>{
+            getAllPublications()
+            getAuthors()
+
+            $("#save_btn").click(()=>{
+                const data = {
+                    "title":$("#title").val(),
+                    "author_id":$("#author_name").val(),
+                    "publisher":$("#publisher").val(),
+                }
+    
+                fetch("http://127.0.0.1:8000/api/publications",{
+                    credentials: "omit",
+                    method: "POST",
+                    headers: {
+                        "Accept":"application/json",
+                        "Content-Type":"application/json"
+                    },
+                    body: JSON.stringify(data)
+                }).then(request=>{
+                    if(request.status==200) {
+                        request.json()
+                        .then(data=>{   
+                        })
+                    }
+                })
+                clearForm()
+                refreshPage()
+                $("#addPublicationModal").modal('hide')
+            })
+        })
+    </script>
+</body>
+</html>
