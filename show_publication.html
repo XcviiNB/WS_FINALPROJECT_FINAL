@@ -63,7 +63,7 @@
 
                 <div class="mb-3">
                     <label for="publisher">Publisher</label>
-                    <input type="text" id="publisher" class="form-control" placeholder="e.g. Shueisha, Weekly Comic Jump...">
+                    <input type="text" id="publisher" class="form-control">
                 </div>
             </div>
 
@@ -114,9 +114,8 @@
         }
 
         function renderPublication(publication) {
-            $("#title").text(publication.title)
-            $("#author_name").text(publication.author.author_name)
-            $("#publisher").text(publication.publisher)
+            $("#title").val(publication.title)
+            $("#publisher").val(publication.publisher)
         }
 
         function getAuthors() {

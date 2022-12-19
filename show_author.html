@@ -49,12 +49,12 @@
 
                 <div class="mb-3">
                     <label for="author_name">Author Name</label>
-                    <input type="text" id="author_name" class="form-control" placeholder="New Author Name">
+                    <input type="text" id="author_name" class="form-control">
                 </div>
 
                 <div class="mb-3">
                     <label for="type">Type</label>
-                    <input type="text" id="type" class="form-control" placeholder="e.g. Freelance">
+                    <input type="text" id="type" class="form-control">
                 </div>
             </div>
 
@@ -105,8 +105,8 @@
         }
 
         function renderAuthor(author) {
-            $("#author_name").text(author.author_name)
-            $("#type").text(author.type)
+            $("#author_name").val(author.author_name)
+            $("#type").val(author.type)
         }
 
         $(document).ready(()=>{
@@ -123,11 +123,11 @@
                 fetch('http://127.0.0.1:8000/api/authors/' + param_id,{
                     credentials: "omit",
                     method: "PUT",
-                    body: JSON.stringify(data),
                     headers:{
                         "Accept":"application/json",
                         "Content-Type":"application/json"
-                    }
+                    },
+                    body: JSON.stringify(data)
                 })
                 .then(response=>{
                     if(response.status==200){
